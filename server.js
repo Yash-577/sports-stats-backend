@@ -11,7 +11,7 @@ connectDB();
 const app = express();
 
 // ✅ Middleware first
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://sports-stats-frontend.vercel.app";
 
 app.use(
   cors({
