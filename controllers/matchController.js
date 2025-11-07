@@ -15,6 +15,7 @@ export const getLiveMatches = async (req, res) => {
         if (now - lastCricketFetchTime > CRICKET_CACHE_DURATION) {
             console.log("📥 Fetching cricket matches from API...");
             cricketData = await fetchCricketMatches();
+            console.log("🔍 Cricket API Response:", JSON.stringify(cricketData, null, 2));
             lastCricketFetchTime = now;
         } else {
             console.log("⏱️ Using cached cricket data (5 min cache)");
