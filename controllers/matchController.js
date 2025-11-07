@@ -1,8 +1,10 @@
 import Match from "../models/matchModel.js"; 
 import { fetchCricketMatches, fetchFootballMatches } from "../utils/api.js";
 
-let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+let lastCricketFetchTime = 0;
+let lastFootballFetchTime = 0;
+const CRICKET_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const FOOTBALL_CACHE_DURATION = 1 * 60 * 1000; // 1 minute
 
 export const getLiveMatches = async (req, res) => {
     try {
@@ -75,7 +77,7 @@ export const getLiveMatches = async (req, res) => {
             // ✅ Delete only completed matches older than 2 days (keep recent ones for reference)
             await Match.deleteMany({
                 status: { $in: ["Completed", "Finished"] },
-                date: { $lt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+                date: { $lt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
             });
 
             lastFetchTime = now;
