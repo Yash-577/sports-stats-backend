@@ -31,7 +31,7 @@ export const getLiveMatches = async (req, res) => {
             console.log("⏱️ Using cached football data (1 min cache)");
         }
 
-     // ✅ FIXED: Better cricket score matching logic
+// ✅ FIXED: Handle matches where second team hasn't batted yet
 const cricketMatches = (cricketData || []).map((m, index) => {
     const teamA = m.teamInfo?.[0]?.name || "Team A";
     const teamB = m.teamInfo?.[1]?.name || "Team B";
@@ -40,7 +40,6 @@ const cricketMatches = (cricketData || []).map((m, index) => {
     const firstInningA = m.score?.find(s => {
         const inning = s.inning?.toLowerCase() || "";
         const teamALower = teamA.toLowerCase();
-        // Match if inning contains team name AND is not followed by other team info
         return inning.includes(teamALower) && !inning.includes("inning 2");
     });
 
@@ -50,13 +49,14 @@ const cricketMatches = (cricketData || []).map((m, index) => {
         return inning.includes(teamBLower) && !inning.includes("inning 2");
     });
 
-    // ✅ Fallback: if not found by name, use score array order
-    const scoreA = firstInningA?.r ?? m.score?.[0]?.r ?? null;
-    const scoreB = firstInningB?.r ?? m.score?.[1]?.r ?? null;
-    const oversA = firstInningA?.o ?? m.score?.[0]?.o ?? null;
-    const oversB = firstInningB?.o ?? m.score?.[1]?.o ?? null;
-    const wicketsA = firstInningA?.w ?? m.score?.[0]?.w ?? null;
-    const wicketsB = firstInningB?.w ?? m.score?.[1]?.w ?? null;
+    // ✅ FIXED: Don't use fallback if team score not found explicitly
+    // Only use scoreA/scoreB if found by team name, otherwise null
+    const scoreA = firstInningA?.r ?? null;
+    const scoreB = firstInningB?.r ?? null;
+    const oversA = firstInningA?.o ?? null;
+    const oversB = firstInningB?.o ?? null;
+    const wicketsA = firstInningA?.w ?? null;
+    const wicketsB = firstInningB?.w ?? null;
 
     return {
         sport: "cricket",
