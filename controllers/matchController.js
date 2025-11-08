@@ -31,31 +31,49 @@ export const getLiveMatches = async (req, res) => {
             console.log("⏱️ Using cached football data (1 min cache)");
         }
 
-        // ✅ FIXED: Match scores by team name in inning field
-        const cricketMatches = (cricketData || []).map((m, index) => {
-            const teamA = m.teamInfo?.[0]?.name || "Team A";
-            const teamB = m.teamInfo?.[1]?.name || "Team B";
+     // ✅ FIXED: Better cricket score matching logic
+const cricketMatches = (cricketData || []).map((m, index) => {
+    const teamA = m.teamInfo?.[0]?.name || "Team A";
+    const teamB = m.teamInfo?.[1]?.name || "Team B";
 
-            // Find scores by matching team name in inning field
-            const firstInningA = m.score?.filter(s => s.inning?.includes(teamA))?.[0];
-            const firstInningB = m.score?.filter(s => s.inning?.includes(teamB))?.[0];
+    // ✅ Better matching: handle inconsistent inning field formats
+    const firstInningA = m.score?.find(s => {
+        const inning = s.inning?.toLowerCase() || "";
+        const teamALower = teamA.toLowerCase();
+        // Match if inning contains team name AND is not followed by other team info
+        return inning.includes(teamALower) && !inning.includes("inning 2");
+    });
 
-            return {
-                sport: "cricket",
-                league: m.series || "Unknown League",
-                teamA: teamA,
-                teamB: teamB,
-                scoreA: firstInningA?.r ? Number(firstInningA.r) : null,
-                scoreB: firstInningB?.r ? Number(firstInningB.r) : null,
-                oversA: firstInningA?.o ? Number(firstInningA.o) : null,
-                oversB: firstInningB?.o ? Number(firstInningB.o) : null,
-                wicketsA: firstInningA?.w ? Number(firstInningA.w) : null,
-                wicketsB: firstInningB?.w ? Number(firstInningB.w) : null,
-                status: m.status || "Unknown",
-                date: m.date,
-                matchId: m.id?.toString() || `cricket-${index}-${Date.now()}`,
-            };
-        });
+    const firstInningB = m.score?.find(s => {
+        const inning = s.inning?.toLowerCase() || "";
+        const teamBLower = teamB.toLowerCase();
+        return inning.includes(teamBLower) && !inning.includes("inning 2");
+    });
+
+    // ✅ Fallback: if not found by name, use score array order
+    const scoreA = firstInningA?.r ?? m.score?.[0]?.r ?? null;
+    const scoreB = firstInningB?.r ?? m.score?.[1]?.r ?? null;
+    const oversA = firstInningA?.o ?? m.score?.[0]?.o ?? null;
+    const oversB = firstInningB?.o ?? m.score?.[1]?.o ?? null;
+    const wicketsA = firstInningA?.w ?? m.score?.[0]?.w ?? null;
+    const wicketsB = firstInningB?.w ?? m.score?.[1]?.w ?? null;
+
+    return {
+        sport: "cricket",
+        league: m.series || "Unknown League",
+        teamA: teamA,
+        teamB: teamB,
+        scoreA: scoreA ? Number(scoreA) : null,
+        scoreB: scoreB ? Number(scoreB) : null,
+        oversA: oversA ? Number(oversA) : null,
+        oversB: oversB ? Number(oversB) : null,
+        wicketsA: wicketsA ? Number(wicketsA) : null,
+        wicketsB: wicketsB ? Number(wicketsB) : null,
+        status: m.status || "Unknown",
+        date: m.date,
+        matchId: m.id?.toString() || `cricket-${index}-${Date.now()}`,
+    };
+});
 
         const footballMatches = (footballData || []).map((m, index) => {
             const home = m.score?.fullTime?.home;
