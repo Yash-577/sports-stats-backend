@@ -31,27 +31,26 @@ export const getLiveMatches = async (req, res) => {
             console.log("⏱️ Using cached football data (1 min cache)");
         }
 
+        // ✅ FIXED: Match scores by team name in inning field
         const cricketMatches = (cricketData || []).map((m, index) => {
-            const teamAInfo = m.score?.[0];
-            const teamBInfo = m.score?.[1];
-            const scoreA = teamAInfo?.r ?? null;
-            const scoreB = teamBInfo?.r ?? null;
-            const oversA = teamAInfo?.o ?? null;
-            const oversB = teamBInfo?.o ?? null;
-            const wicketsA = teamAInfo?.w ?? null;
-            const wicketsB = teamBInfo?.w ?? null;
+            const teamA = m.teamInfo?.[0]?.name || "Team A";
+            const teamB = m.teamInfo?.[1]?.name || "Team B";
+
+            // Find scores by matching team name in inning field
+            const firstInningA = m.score?.filter(s => s.inning?.includes(teamA))?.[0];
+            const firstInningB = m.score?.filter(s => s.inning?.includes(teamB))?.[0];
 
             return {
                 sport: "cricket",
                 league: m.series || "Unknown League",
-                teamA: m.teamInfo?.[0]?.name || "Team A",
-                teamB: m.teamInfo?.[1]?.name || "Team B",
-                scoreA: scoreA ? Number(scoreA) : null,
-                scoreB: scoreB ? Number(scoreB) : null,
-                oversA: oversA ? Number(oversA) : null,
-                oversB: oversB ? Number(oversB) : null,
-                wicketsA: wicketsA ? Number(wicketsA) : null,
-                wicketsB: wicketsB ? Number(wicketsB) : null,
+                teamA: teamA,
+                teamB: teamB,
+                scoreA: firstInningA?.r ? Number(firstInningA.r) : null,
+                scoreB: firstInningB?.r ? Number(firstInningB.r) : null,
+                oversA: firstInningA?.o ? Number(firstInningA.o) : null,
+                oversB: firstInningB?.o ? Number(firstInningB.o) : null,
+                wicketsA: firstInningA?.w ? Number(firstInningA.w) : null,
+                wicketsB: firstInningB?.w ? Number(firstInningB.w) : null,
                 status: m.status || "Unknown",
                 date: m.date,
                 matchId: m.id?.toString() || `cricket-${index}-${Date.now()}`,
